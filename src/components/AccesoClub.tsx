@@ -14,13 +14,17 @@ const textos: Record<Zona, { titulo: string; ayuda: string; bloquear: string }> 
   },
 }
 
-/** Pide la clave de la zona antes de mostrar su contenido. */
-export function AccesoClub({ zona, children }: { zona: Zona; children: ReactNode }) {
+/**
+ * Pide la clave de la zona antes de mostrar su contenido.
+ * `titulo` distingue pantallas que comparten clave (p. ej. la bandeja de correos usa la del organizador).
+ */
+export function AccesoClub({ zona, titulo, children }: { zona: Zona; titulo?: string; children: ReactNode }) {
   const [abierta, setAbierta] = useState(() => zonaDesbloqueada(zona))
   const [clave, setClave] = useState('')
   const [error, setError] = useState(false)
   const campo = useRef<HTMLInputElement>(null)
   const t = textos[zona]
+  const encabezado = titulo ?? t.titulo
 
   function entrar(e: FormEvent) {
     e.preventDefault()
@@ -56,8 +60,9 @@ export function AccesoClub({ zona, children }: { zona: Zona; children: ReactNode
 
   return (
     <section className="estado">
+      <title>{`${encabezado} · Club de Running Arequipa`}</title>
       <span className="sello" aria-hidden="true">🔒</span>
-      <h1>{t.titulo}</h1>
+      <h1>{encabezado}</h1>
       <p>{t.ayuda}</p>
       <form className="formulario acceso-zona" onSubmit={entrar} noValidate>
         <label>
