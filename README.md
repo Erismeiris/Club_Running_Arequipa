@@ -38,6 +38,19 @@ printf "VITE_CLAVE_PUERTA=otra-clave\nVITE_CLAVE_ORGANIZADOR=clave-organizador\n
 
 > Es una barrera sencilla para que un socio no entre por error, no seguridad real: sin backend, las claves viajan dentro del JavaScript publicado y cualquiera con conocimientos técnicos podría encontrarlas. Como este repositorio es público, conviene usar en Netlify claves distintas a las de este README.
 
+## Cómo se accede a la encuesta
+
+La encuesta está en `/encuesta/:codigo`, donde `:codigo` es el código QR de la inscripción (p. ej. `/encuesta/CRA-LUCIA10K`). En la app no hay ningún menú ni botón que lleve a ella; se llega con un enlace personal:
+
+1. **Se marca la asistencia.** El día de la actividad, en `/puerta` (escaneando el QR o buscando por nombre) o en la pestaña *Asistencia* del panel.
+2. **El organizador envía la encuesta.** En `/organizador/actividad/<id>`, pestaña **Encuesta**, botón **"Enviar encuesta"**. Se genera un correo, con el enlace **"Responder la encuesta"**, para cada persona con asistencia marcada que aún no lo haya recibido. Pulsar otra vez solo lo envía a quienes se hayan marcado después.
+3. **El participante abre su enlace** y responde: valoración de 1 a 5, "¿Volverías?" y un comentario opcional.
+4. **Los resultados** aparecen en la misma pestaña *Encuesta* (respondieron, media, % que volvería y comentarios) y en el CSV exportado.
+
+Si el enlace lo abre alguien sin asistencia marcada, ve "La encuesta es para quienes asistieron". Si ya respondió, ve el agradecimiento y no puede responder otra vez.
+
+> **Importante en esta versión:** los correos no se envían de verdad (no hay backend; ver *Limitaciones*). El enlace de cada participante solo se ve en la bandeja simulada `/correos`, que está protegida con la clave de organizador. Hasta que haya envío real de correos, el organizador tiene que copiar el enlace de esa bandeja y hacérselo llegar al participante (WhatsApp, correo propio…). Para probarlo en la demo basta con abrir el enlace desde `/correos`.
+
 ## Reglas de negocio (`src/lib/store.ts`)
 
 - **Plazas atómicas**: cada operación es una transacción que relee el estado, comprueba y escribe dentro de un Web Lock (`navigator.locks`) exclusivo, así que dos inscripciones simultáneas a la última plaza (aunque sea desde otra pestaña) no pueden entrar las dos: la segunda queda en lista de espera.
