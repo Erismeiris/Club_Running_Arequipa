@@ -63,6 +63,27 @@ export function Inscripcion() {
     )
   }
 
+  // Ya pasó por la puerta: el QR no sirve más, lo útil ahora es la encuesta.
+  if (i.asistio) {
+    return (
+      <section className="estado">
+        <title>Gracias por venir · Club de Running Arequipa</title>
+        <span className="sello sello--ok" aria-hidden="true">✓</span>
+        <h1>¡Gracias por venir, {i.nombre.split(' ')[0]}!</h1>
+        {resumen}
+        {i.encuesta ? (
+          <p>Ya nos contaste qué tal te fue. ¡Gracias!</p>
+        ) : (
+          <>
+            <p>Cuéntanos en 30 segundos qué tal te fue: nos ayuda a preparar las próximas actividades.</p>
+            <Link className="boton boton--bloque" to={`/encuesta/${i.codigoQR}`}>Responder la encuesta</Link>
+          </>
+        )}
+        <Link className="boton boton--secundario boton--bloque" to="/">Ver próximas actividades</Link>
+      </section>
+    )
+  }
+
   return (
     <section className="estado">
       <title>Inscripción confirmada · Club de Running Arequipa</title>
@@ -72,6 +93,7 @@ export function Inscripcion() {
       {resumen}
       <QRCodigo valor={i.codigoQR} />
       <p>Muéstralo en la puerta el día de la actividad. Es personal y sirve una sola vez.</p>
+      <p className="nota">Guarda esta página: después de la actividad, aquí mismo encontrarás la encuesta.</p>
       <p className="aviso aviso--correo"><span aria-hidden="true">📩 </span>Te enviamos un correo a <b>{i.correo}</b> con tu código QR y el enlace para cancelar.</p>
       <Link className="boton boton--secundario boton--bloque" to="/">Ver otras actividades</Link>
       <Link className="enlace-suave" to={`/cancelar/${i.codigoQR}`}>No podré ir, cancelar mi inscripción</Link>

@@ -10,7 +10,7 @@ React 19 + Vite + TypeScript, persistencia en `localStorage`, despliegue en Netl
 | --- | --- |
 | `/` | Home pública: próximas actividades con "Plazas libres: X/Y" |
 | `/actividad/:id` | Ficha con precio informativo + formulario de 3 campos y casilla de consentimiento de datos ("Inscribirme" o "Unirme a la lista de espera") |
-| `/inscripcion/:codigo` | Confirmación con código QR y aviso de correo enviado |
+| `/inscripcion/:codigo` | Confirmación con código QR y aviso de correo enviado; tras marcar la asistencia, enlace a la encuesta |
 | `/cancelar/:codigo` | Cancelación (enlace del correo) con paso de confirmación |
 | `/plaza/:codigo` | Confirmar una plaza liberada desde la lista de espera (24 h) |
 | `/encuesta/:codigo` | Encuesta corta tras la actividad (enlace del correo, solo para quienes asistieron) |
@@ -44,12 +44,16 @@ La encuesta está en `/encuesta/:codigo`, donde `:codigo` es el código QR de la
 
 1. **Se marca la asistencia.** El día de la actividad, en `/puerta` (escaneando el QR o buscando por nombre) o en la pestaña *Asistencia* del panel.
 2. **El organizador envía la encuesta.** En `/organizador/actividad/<id>`, pestaña **Encuesta**, botón **"Enviar encuesta"**. Se genera un correo, con el enlace **"Responder la encuesta"**, para cada persona con asistencia marcada que aún no lo haya recibido. Pulsar otra vez solo lo envía a quienes se hayan marcado después.
-3. **El participante abre su enlace** y responde: valoración de 1 a 5, "¿Volverías?" y un comentario opcional.
+3. **El participante abre la encuesta** por uno de estos dos caminos:
+   - **Su página de inscripción** (`/inscripcion/:codigo`), la del QR que ve al inscribirse. Cuando tiene la asistencia marcada, esa página cambia a "¡Gracias por venir!" con el botón **"Responder la encuesta"**. Este camino no depende del correo ni de que el organizador haya pulsado "Enviar encuesta". La página de confirmación ya le avisa: "Guarda esta página: después de la actividad, aquí mismo encontrarás la encuesta".
+   - **El enlace del correo** "Responder la encuesta".
+
+   Responde con una valoración de 1 a 5, "¿Volverías?" y un comentario opcional.
 4. **Los resultados** aparecen en la misma pestaña *Encuesta* (respondieron, media, % que volvería y comentarios) y en el CSV exportado.
 
 Si el enlace lo abre alguien sin asistencia marcada, ve "La encuesta es para quienes asistieron". Si ya respondió, ve el agradecimiento y no puede responder otra vez.
 
-> **Importante en esta versión:** los correos no se envían de verdad (no hay backend; ver *Limitaciones*). El enlace de cada participante solo se ve en la bandeja simulada `/correos`, que está protegida con la clave de organizador. Hasta que haya envío real de correos, el organizador tiene que copiar el enlace de esa bandeja y hacérselo llegar al participante (WhatsApp, correo propio…). Para probarlo en la demo basta con abrir el enlace desde `/correos`.
+> **Importante en esta versión:** los correos no se envían de verdad (no hay backend; ver *Limitaciones*). El enlace de cada participante solo se ve en la bandeja simulada `/correos`, que está protegida con la clave de organizador. Por eso el camino fiable hoy es la página de inscripción del participante (paso 3), siempre que la haya guardado. Si no la tiene, el organizador puede copiar el enlace de esa bandeja y hacérselo llegar (WhatsApp, correo propio…). Para probarlo en la demo basta con abrir el enlace desde `/correos`.
 
 ## Reglas de negocio (`src/lib/store.ts`)
 
