@@ -7,31 +7,116 @@ export const HORAS_PARA_CONFIRMAR = 24
 
 // ---------- Almacenamiento ----------
 
+/**
+ * ok: localStorage funciona.
+ * no-disponible: el navegador lo bloquea (modo privado, cookies desactivadas…); se trabaja en memoria.
+ * corrupto: los datos guardados no se podían leer; se guardó una copia y se restauraron los de ejemplo.
+ * error-escritura: se pudo leer pero no guardar (p. ej. espacio lleno); los cambios solo viven en esta pestaña.
+ */
+export type EstadoAlmacenamiento = 'ok' | 'no-disponible' | 'corrupto' | 'error-escritura'
+
+type Almacen = Pick<Storage, 'getItem' | 'setItem'>
 const memoria = new Map<string, string>()
-const storage: Pick<Storage, 'getItem' | 'setItem'> =
-  typeof localStorage !== 'undefined'
-    ? localStorage
-    : { getItem: (k) => memoria.get(k) ?? null, setItem: (k, v) => void memoria.set(k, v) }
+const almacenMemoria: Almacen = { getItem: (k) => memoria.get(k) ?? null, setItem: (k, v) => void memoria.set(k, v) }
+
+let storage: Almacen = almacenMemoria
+let estadoAlmacenamiento: EstadoAlmacenamiento = 'ok'
+const oyentesEstado = new Set<() => void>()
+
+function cambiarEstado(nuevo: EstadoAlmacenamiento) {
+  if (nuevo === estadoAlmacenamiento) return
+  estadoAlmacenamiento = nuevo
+  oyentesEstado.forEach((fn) => fn())
+}
+
+/** Pasa a trabajar en memoria conservando lo último que se pudo leer, para no perder la sesión en curso. */
+function pasarAMemoria(estado: EstadoAlmacenamiento) {
+  if (storage !== almacenMemoria && cacheRaw) memoria.set(KEY, cacheRaw)
+  storage = almacenMemoria
+  cambiarEstado(estado)
+}
+
+/** Comprueba que el almacenamiento se puede leer y escribir de verdad (Safari privado lanza al escribir). */
+export function usarAlmacenamiento(candidato: Almacen | undefined) {
+  cacheRaw = null
+  cacheDb = null
+  memoria.clear()
+  estadoAlmacenamiento = 'ok'
+  try {
+    if (!candidato) throw new Error('Sin localStorage')
+    const prueba = 'cra:prueba'
+    candidato.setItem(prueba, '1')
+    if (candidato.getItem(prueba) !== '1') throw new Error('localStorage no conserva los datos')
+    ;(candidato as Partial<Storage>).removeItem?.(prueba)
+    storage = candidato
+  } catch {
+    storage = almacenMemoria
+    estadoAlmacenamiento = 'no-disponible'
+  }
+  oyentesEstado.forEach((fn) => fn())
+}
+
+export const obtenerEstadoAlmacenamiento = () => estadoAlmacenamiento
+
+export function suscribirEstadoAlmacenamiento(fn: () => void) {
+  oyentesEstado.add(fn)
+  return () => void oyentesEstado.delete(fn)
+}
 
 const oyentes = new Set<() => void>()
 let cacheRaw: string | null = null
 let cacheDb: DB | null = null
 
+function leerRaw(): string | null {
+  try {
+    return storage.getItem(KEY)
+  } catch {
+    pasarAMemoria('no-disponible')
+    return storage.getItem(KEY)
+  }
+}
+
 function leer(): DB {
-  let raw = storage.getItem(KEY)
-  if (!raw) {
-    raw = JSON.stringify(crearSemilla(new Date()))
+  let raw = leerRaw()
+  if (raw && raw === cacheRaw && cacheDb) return cacheDb
+  if (raw) {
+    try {
+      const db = JSON.parse(raw) as DB
+      if (!Array.isArray(db?.actividades) || !Array.isArray(db?.inscripciones)) throw new Error('Formato inesperado')
+      db.correos ??= []
+      cacheRaw = raw
+      cacheDb = db
+      return db
+    } catch {
+      // Se guarda una copia de lo que había para poder recuperarlo a mano.
+      try {
+        storage.setItem(`${KEY}:danado:${Date.now()}`, raw)
+      } catch {
+        /* sin espacio para la copia: se avisa igualmente */
+      }
+      cambiarEstado('corrupto')
+      raw = null
+    }
+  }
+  const semilla = crearSemilla(new Date())
+  raw = JSON.stringify(semilla)
+  guardarRaw(raw)
+  cacheRaw = raw
+  cacheDb = semilla
+  return semilla
+}
+
+function guardarRaw(raw: string) {
+  try {
+    storage.setItem(KEY, raw)
+  } catch {
+    pasarAMemoria('error-escritura')
     storage.setItem(KEY, raw)
   }
-  if (raw !== cacheRaw || !cacheDb) {
-    cacheRaw = raw
-    cacheDb = JSON.parse(raw) as DB
-  }
-  return cacheDb
 }
 
 function escribir(db: DB) {
-  storage.setItem(KEY, JSON.stringify(db))
+  guardarRaw(JSON.stringify(db))
   oyentes.forEach((fn) => fn())
 }
 
@@ -331,6 +416,8 @@ export function forzarVencimiento(inscripcionId: string): Promise<void> {
 }
 
 export function restablecerDemo() {
-  storage.setItem(KEY, JSON.stringify(crearSemilla(new Date())))
-  oyentes.forEach((fn) => fn())
+  escribir(crearSemilla(new Date()))
+  if (estadoAlmacenamiento === 'corrupto') cambiarEstado('ok')
 }
+
+usarAlmacenamiento(typeof localStorage !== 'undefined' ? localStorage : undefined)

@@ -11,6 +11,7 @@ import { Panel } from './pages/Panel'
 import { PanelActividad } from './pages/PanelActividad'
 import { FormActividad } from './pages/FormActividad'
 import { Correos } from './pages/Correos'
+import { AvisoAlmacenamiento } from './components/AvisoAlmacenamiento'
 
 export function App() {
   const { pathname } = useLocation()
@@ -46,6 +47,8 @@ export function App() {
           </nav>
         )}
       </header>
+
+      <AvisoAlmacenamiento />
 
       <main className="contenido">
         <Routes>

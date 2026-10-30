@@ -1,0 +1,18 @@
+.aviso-almacenamiento {
+  display: flex; align-items: flex-start; gap: 12px;
+  max-width: 928px; margin: 0 auto 8px; width: calc(100% - 32px);
+  padding: 14px 14px 14px 16px; border-radius: 16px;
+  background: #fde4e1; color: #7a1a12; border: 1.5px solid #f2b8b0;
+}
+.aviso-almacenamiento__icono {
+  flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  background: #b42318; color: #fff; font-weight: 800;
+}
+.aviso-almacenamiento > div { flex: 1; min-width: 0; }
+.aviso-almacenamiento b { display: block; margin-bottom: 2px; }
+.aviso-almacenamiento p { margin: 0; font-size: 0.92rem; line-height: 1.4; }
+.aviso-almacenamiento button {
+  flex: none; width: 36px; height: 36px; margin: -6px -6px 0 0; border: none; border-radius: 50%;
+  background: transparent; color: inherit; font-size: 1.4rem; cursor: pointer;
+}
+.aviso-almacenamiento button:hover { background: rgb(180 35 24 / 0.1); }
