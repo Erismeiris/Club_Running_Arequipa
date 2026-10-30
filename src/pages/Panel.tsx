@@ -19,9 +19,10 @@ export function Panel() {
 
   return (
     <section className="panel">
+      <title>Panel del organizador · Club de Running Arequipa</title>
       <div className="panel__cabecera">
         <h1>Panel del organizador</h1>
-        <Link className="boton" to="/organizador/nueva">+ Crear actividad</Link>
+        <Link className="boton" to="/organizador/nueva"><span aria-hidden="true">+</span> Crear actividad</Link>
       </div>
 
       <ul className="lista-panel">

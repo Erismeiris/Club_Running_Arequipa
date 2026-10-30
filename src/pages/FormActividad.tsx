@@ -26,6 +26,7 @@ export function FormActividad() {
 
   return (
     <section className="panel panel--estrecho">
+      <title>{`${origen ? 'Duplicar' : 'Crear'} actividad · Club de Running Arequipa`}</title>
       <Link to="/organizador" className="volver">← Panel</Link>
       <h1>{origen ? 'Duplicar actividad' : 'Crear actividad'}</h1>
       {origen && <p className="aviso aviso--espera">Copiamos título, lugar, descripción y plazas de “{origen.titulo}”. Elige la nueva fecha y hora; los inscritos no se copian.</p>}

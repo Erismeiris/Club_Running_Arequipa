@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAhora, useDb } from '../lib/hooks'
 import { plazasLibres } from '../lib/store'
-import { esProxima, fechaCorta } from '../lib/fechas'
+import { esProxima, fechaCorta, fechaLarga } from '../lib/fechas'
 import { Plazas } from '../components/Plazas'
 
 export function Home() {
@@ -13,6 +13,7 @@ export function Home() {
 
   return (
     <>
+      <title>Actividades · Club de Running Arequipa</title>
       <section className="intro">
         <p className="intro__saludo">¡Hola, runner!</p>
         <h1>Próximas actividades del club</h1>
@@ -33,13 +34,14 @@ export function Home() {
                   <span className="hoja-fecha__mes">{f.mes}</span>
                 </div>
                 <div className="tarjeta__cuerpo">
-                  <h2>{a.titulo}</h2>
+                  <h2 id={`titulo-${a.id}`}>{a.titulo}</h2>
                   <p className="meta">
-                    <span>📍 {a.lugar}</span>
-                    <span>🕕 {a.hora} h</span>
+                    <span className="solo-lector">{fechaLarga(a.fecha)}</span>
+                    <span><span aria-hidden="true">📍 </span>{a.lugar}</span>
+                    <span><span aria-hidden="true">🕕 </span>{a.hora} h</span>
                   </p>
                   <Plazas libres={plazasLibres(db, a, ahora)} total={a.plazas} compacto />
-                  <Link className="boton boton--bloque" to={`/actividad/${a.id}`}>
+                  <Link className="boton boton--bloque" to={`/actividad/${a.id}`} aria-describedby={`titulo-${a.id}`}>
                     Ver actividad
                   </Link>
                 </div>

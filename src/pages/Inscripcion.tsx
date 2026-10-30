@@ -42,6 +42,7 @@ export function Inscripcion() {
     const oferta = ofertaActiva(i, ahora)
     return (
       <section className="estado">
+        <title>Lista de espera · Club de Running Arequipa</title>
         <span className="sello sello--espera" aria-hidden="true">⏳</span>
         <h1>{oferta ? '¡Se liberó una plaza para ti!' : 'Estás en la lista de espera'}</h1>
         {resumen}
@@ -56,7 +57,7 @@ export function Inscripcion() {
             <p>Si alguien cancela te escribimos a <b>{i.correo}</b> y tendrás 24 h para confirmar.</p>
           </>
         )}
-        <p className="aviso aviso--correo">📩 Te enviamos un correo a {i.correo} con estos datos.</p>
+        <p className="aviso aviso--correo"><span aria-hidden="true">📩 </span>Te enviamos un correo a {i.correo} con estos datos.</p>
         <Link className="enlace-suave" to={`/cancelar/${i.codigoQR}`}>Salir de la lista de espera</Link>
       </section>
     )
@@ -64,13 +65,14 @@ export function Inscripcion() {
 
   return (
     <section className="estado">
+      <title>Inscripción confirmada · Club de Running Arequipa</title>
       <span className="sello sello--ok" aria-hidden="true">✓</span>
       <h1>¡Inscripción confirmada!</h1>
       {state?.yaExistia && <p className="aviso aviso--espera">Ya estabas inscrito con este correo, aquí tienes tu QR.</p>}
       {resumen}
       <QRCodigo valor={i.codigoQR} />
       <p>Muéstralo en la puerta el día de la actividad. Es personal y sirve una sola vez.</p>
-      <p className="aviso aviso--correo">📩 Te enviamos un correo a <b>{i.correo}</b> con tu código QR y el enlace para cancelar.</p>
+      <p className="aviso aviso--correo"><span aria-hidden="true">📩 </span>Te enviamos un correo a <b>{i.correo}</b> con tu código QR y el enlace para cancelar.</p>
       <Link className="boton boton--secundario boton--bloque" to="/">Ver otras actividades</Link>
       <Link className="enlace-suave" to={`/cancelar/${i.codigoQR}`}>No podré ir, cancelar mi inscripción</Link>
     </section>

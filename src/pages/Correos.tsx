@@ -7,6 +7,7 @@ export function Correos() {
   const { correos } = useDb()
   return (
     <section className="panel panel--estrecho">
+      <title>Bandeja de correos · Club de Running Arequipa</title>
       <h1>Bandeja de correos</h1>
       <p className="aviso aviso--espera">
         Demo: esta app no tiene servidor de correo, así que los avisos que recibirían los socios se muestran aquí.

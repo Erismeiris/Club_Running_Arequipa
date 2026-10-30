@@ -31,6 +31,7 @@ export function ConfirmarPlaza() {
   const oferta = ofertaActiva(i, ahora)
   return (
     <section className="estado">
+      <title>Confirmar mi plaza · Club de Running Arequipa</title>
       <span className="sello sello--espera" aria-hidden="true">🎉</span>
       <h1>{oferta ? '¡Se liberó una plaza para ti!' : 'Esta plaza ya no está disponible'}</h1>
       <p className="resumen-actividad">

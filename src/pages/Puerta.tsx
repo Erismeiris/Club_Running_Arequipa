@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useDb } from '../lib/hooks'
 import { marcarAsistencia, validarQR, type ResultadoValidacion } from '../lib/store'
-import { aISODate, fechaLarga } from '../lib/fechas'
+import { aISODate, fechaCorta, fechaLarga } from '../lib/fechas'
 import type { Inscripcion } from '../lib/types'
 
 // La librería del escáner es pesada: solo se descarga al abrir la cámara.
@@ -55,18 +55,20 @@ export function Puerta() {
 
   return (
     <section className="puerta">
+      <title>Control de puerta · Club de Running Arequipa</title>
       <h1>Control de asistencia</h1>
       <label className="selector">
         Actividad
         <select value={actividadId} onChange={(e) => { setActividadId(e.target.value); setResultado(null) }}>
-          {ordenadas.map((a) => (
-            <option key={a.id} value={a.id}>{a.titulo} · {a.fecha}</option>
-          ))}
+          {ordenadas.map((a) => {
+            const f = fechaCorta(a.fecha)
+            return <option key={a.id} value={a.id}>{a.titulo} · {f.semana} {f.dia} {f.mes}</option>
+          })}
         </select>
       </label>
       <p className="contador">
         <span className="capital">{fechaLarga(actividad.fecha)}</span>
-        <b>{asistieron}/{confirmadas.length}</b> han llegado
+        <span><b>{asistieron}/{confirmadas.length}</b> han llegado</span>
       </p>
 
       {resultado && <BannerResultado key={lectura} r={resultado} />}
@@ -81,10 +83,10 @@ export function Puerta() {
             <button className="boton boton--secundario boton--bloque" onClick={() => setCamara(false)}>Apagar cámara</button>
           </>
         ) : (
-          <button className="boton boton--bloque" onClick={() => setCamara(true)}>📷 Abrir cámara</button>
+          <button className="boton boton--bloque" onClick={() => setCamara(true)}><span aria-hidden="true">📷</span> Abrir cámara</button>
         )}
         <form className="fila-codigo" onSubmit={enviarCodigo}>
-          <input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="o escribe el código: CRA-…" autoCapitalize="characters" aria-label="Código QR" />
+          <input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="o escribe CRA-…" autoCapitalize="characters" autoComplete="off" aria-label="Código de la inscripción" />
           <button className="boton">Validar</button>
         </form>
       </div>
@@ -131,7 +133,7 @@ function BannerResultado({ r }: { r: ResultadoValidacion }) {
     'no-encontrado': { clase: 'error', titulo: 'Código desconocido', texto: 'No existe ninguna inscripción con ese código.' },
   }[r.tipo]
   return (
-    <div className={`banner banner--${config.clase}`} role="status" aria-live="assertive">
+    <div className={`banner banner--${config.clase}`} role="alert">
       <b>{config.titulo}</b>
       <span>{config.texto}</span>
     </div>

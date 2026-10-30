@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAhora, useDb } from '../lib/hooks'
 import { inscribir, listaEspera, plazasLibres, validarDatos } from '../lib/store'
@@ -13,6 +13,7 @@ export function FichaActividad() {
   const [datos, setDatos] = useState({ nombre: '', correo: '', telefono: '' })
   const [errores, setErrores] = useState<Record<string, string>>({})
   const [enviando, setEnviando] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   const actividad = db.actividades.find((a) => a.id === id)
   if (!actividad) {
@@ -32,7 +33,9 @@ export function FichaActividad() {
     e.preventDefault()
     const errs = validarDatos(datos)
     setErrores(errs as Record<string, string>)
-    if (Object.keys(errs).length) return
+    const primero = (['nombre', 'correo', 'telefono'] as const).find((k) => errs[k])
+    // Los errores quedan encima del botón: llevamos el foco al primer campo que hay que corregir.
+    if (primero) return formRef.current?.querySelector<HTMLInputElement>(`#campo-${primero}`)?.focus()
     setEnviando(true)
     try {
       const { inscripcion, yaExistia } = await inscribir({ ...datos, actividadId: actividad!.id })
@@ -43,13 +46,20 @@ export function FichaActividad() {
   }
 
   const campo = (k: keyof typeof datos) => ({
+    id: `campo-${k}`,
     value: datos[k],
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setDatos({ ...datos, [k]: e.target.value }),
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDatos({ ...datos, [k]: e.target.value })
+      if (errores[k]) setErrores({ ...errores, [k]: '' })
+    },
+    required: true,
     'aria-invalid': !!errores[k],
+    'aria-describedby': errores[k] ? `error-${k}` : undefined,
   })
 
   return (
     <article className="ficha">
+      <title>{`${actividad.titulo} · Club de Running Arequipa`}</title>
       <Link to="/" className="volver">← Actividades</Link>
       <h1>{actividad.titulo}</h1>
       <dl className="datos-ficha">
@@ -61,7 +71,7 @@ export function FichaActividad() {
 
       <Plazas libres={libres} total={actividad.plazas} />
 
-      <form className="formulario" onSubmit={enviar} noValidate>
+      <form className="formulario" onSubmit={enviar} noValidate ref={formRef}>
         <h2>{llena ? 'Está completa, pero aún puedes apuntarte' : 'Reserva tu plaza'}</h2>
         {llena && (
           <p className="aviso aviso--espera">
@@ -72,17 +82,17 @@ export function FichaActividad() {
         <label>
           Nombre completo
           <input {...campo('nombre')} autoComplete="name" autoCapitalize="words" placeholder="Ej. Ana Torres Salas" />
-          {errores.nombre && <small className="error">{errores.nombre}</small>}
+          {errores.nombre && <small className="error" id="error-nombre">{errores.nombre}</small>}
         </label>
         <label>
           Correo
           <input {...campo('correo')} type="email" inputMode="email" autoComplete="email" placeholder="ana@correo.com" />
-          {errores.correo && <small className="error">{errores.correo}</small>}
+          {errores.correo && <small className="error" id="error-correo">{errores.correo}</small>}
         </label>
         <label>
           Teléfono
           <input {...campo('telefono')} type="tel" inputMode="tel" autoComplete="tel" placeholder="959 000 000" />
-          {errores.telefono && <small className="error">{errores.telefono}</small>}
+          {errores.telefono && <small className="error" id="error-telefono">{errores.telefono}</small>}
         </label>
         <button className={`boton boton--bloque${llena ? ' boton--secundario' : ''}`} disabled={enviando}>
           {enviando ? 'Guardando…' : llena ? 'Unirme a la lista de espera' : 'Inscribirme'}
