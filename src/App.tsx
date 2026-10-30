@@ -11,6 +11,7 @@ import { Panel } from './pages/Panel'
 import { PanelActividad } from './pages/PanelActividad'
 import { FormActividad } from './pages/FormActividad'
 import { Correos } from './pages/Correos'
+import { Encuesta } from './pages/Encuesta'
 import { AvisoAlmacenamiento } from './components/AvisoAlmacenamiento'
 import { AccesoClub } from './components/AccesoClub'
 
@@ -58,6 +59,7 @@ export function App() {
           <Route path="/inscripcion/:codigo" element={<Inscripcion />} />
           <Route path="/cancelar/:codigo" element={<Cancelar />} />
           <Route path="/plaza/:codigo" element={<ConfirmarPlaza />} />
+          <Route path="/encuesta/:codigo" element={<Encuesta />} />
           <Route path="/puerta" element={<AccesoClub zona="puerta"><Puerta /></AccesoClub>} />
           <Route path="/organizador" element={<AccesoClub zona="organizador"><Outlet /></AccesoClub>}>
             <Route index element={<Panel />} />

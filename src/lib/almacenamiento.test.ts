@@ -33,7 +33,7 @@ describe('fallos de localStorage', () => {
     usarAlmacenamiento(almacenFalso({ fallaEscritura: true }))
     expect(obtenerEstadoAlmacenamiento()).toBe('no-disponible')
     const a = obtenerDb().actividades[0]
-    const r = await inscribir({ actividadId: a.id, nombre: 'Ana Torres', correo: 'ana@test.pe', telefono: '959000000' })
+    const r = await inscribir({ actividadId: a.id, nombre: 'Ana Torres', correo: 'ana@test.pe', telefono: '959000000', consentimiento: true })
     expect(r.inscripcion.estado).toBe('confirmada')
   })
 
@@ -62,7 +62,7 @@ describe('fallos de localStorage', () => {
     usarAlmacenamiento(almacen)
     const a = obtenerDb().actividades[0]
     almacen.bloquearEscritura()
-    const r = await inscribir({ actividadId: a.id, nombre: 'Ana Torres', correo: 'ana@test.pe', telefono: '959000000' })
+    const r = await inscribir({ actividadId: a.id, nombre: 'Ana Torres', correo: 'ana@test.pe', telefono: '959000000', consentimiento: true })
     expect(obtenerEstadoAlmacenamiento()).toBe('error-escritura')
     expect(obtenerDb().inscripciones.some((i) => i.id === r.inscripcion.id)).toBe(true)
   })

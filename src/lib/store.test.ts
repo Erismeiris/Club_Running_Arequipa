@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  cancelar, confirmarPlaza, crearActividad, inscribir, listaEspera, marcarAsistencia, obtenerDb,
-  plantillaDuplicado, plazasLibres, restablecerDemo, sincronizar, validarQR,
+  cancelar, confirmarPlaza, crearActividad, enviarEncuesta, inscribir, listaEspera, marcarAsistencia, obtenerDb,
+  plantillaDuplicado, plazasLibres, responderEncuesta, restablecerDemo, resumenEncuesta, sincronizar, validarDatos, validarQR,
 } from './store'
 import { generarCSV } from './csv'
 
-const persona = (n: number) => ({ nombre: `Runner ${n}`, correo: `r${n}@test.pe`, telefono: '959000000' })
+const persona = (n: number) => ({ nombre: `Runner ${n}`, correo: `r${n}@test.pe`, telefono: '959000000', consentimiento: true })
 
 async function actividadCon(plazas: number) {
-  return crearActividad({ titulo: 'Prueba', fecha: '2030-01-01', hora: '07:00', lugar: 'Plaza de Armas', descripcion: 'x', plazas })
+  return crearActividad({ titulo: 'Prueba', fecha: '2030-01-01', hora: '07:00', lugar: 'Plaza de Armas', descripcion: 'x', plazas, precio: 15 })
 }
 
 beforeEach(() => {
@@ -140,5 +140,59 @@ describe('organizador', () => {
       ['Taller de técnica de carrera', 12],
     ])
     expect(db.inscripciones).toHaveLength(3)
+  })
+})
+
+describe('consentimiento de datos', () => {
+  it('sin marcar la casilla no se puede inscribir', async () => {
+    const a = await actividadCon(3)
+    expect(validarDatos({ ...persona(1), consentimiento: false }).consentimiento).toBeTruthy()
+    await expect(inscribir({ ...persona(1), consentimiento: false, actividadId: a.id })).rejects.toThrow()
+    expect(obtenerDb().inscripciones.filter((i) => i.actividadId === a.id)).toHaveLength(0)
+  })
+
+  it('guarda cuándo se aceptó y lo exporta en el CSV', async () => {
+    const a = await actividadCon(3)
+    const { inscripcion } = await inscribir({ ...persona(1), actividadId: a.id })
+    expect(inscripcion.consentimientoEn).toBe(inscripcion.creadaEn)
+    expect(generarCSV(a, obtenerDb().inscripciones)).toContain(inscripcion.consentimientoEn!)
+  })
+})
+
+describe('precio informativo', () => {
+  it('se guarda en la actividad y el duplicado lo copia', async () => {
+    const a = await actividadCon(3)
+    expect(a.precio).toBe(15)
+    expect(plantillaDuplicado(a).precio).toBe(15)
+  })
+})
+
+describe('encuesta tras la actividad', () => {
+  it('solo se envía a quienes asistieron, una vez por persona', async () => {
+    const a = await actividadCon(3)
+    const fue = (await inscribir({ ...persona(1), actividadId: a.id })).inscripcion
+    await inscribir({ ...persona(2), actividadId: a.id })
+    await validarQR(fue.codigoQR, a.id)
+    expect(await enviarEncuesta(a.id)).toBe(1)
+    expect(await enviarEncuesta(a.id)).toBe(0)
+    expect(obtenerDb().correos[0].enlace?.ruta).toBe(`/encuesta/${fue.codigoQR}`)
+  })
+
+  it('guarda una única respuesta y la resume para el organizador', async () => {
+    const a = await actividadCon(3)
+    const fue = (await inscribir({ ...persona(1), actividadId: a.id })).inscripcion
+    const noFue = (await inscribir({ ...persona(2), actividadId: a.id })).inscripcion
+    await validarQR(fue.codigoQR, a.id)
+    await enviarEncuesta(a.id)
+
+    expect(await responderEncuesta(noFue.codigoQR, { valoracion: 5, volveria: true, comentario: '' })).toBe('no-asistio')
+    expect(await responderEncuesta(fue.codigoQR, { valoracion: 9, volveria: true, comentario: '' })).toBe('no-valida')
+    expect(await responderEncuesta(fue.codigoQR, { valoracion: 4, volveria: true, comentario: ' Más agua ' })).toBe('guardada')
+    expect(await responderEncuesta(fue.codigoQR, { valoracion: 1, volveria: false, comentario: '' })).toBe('ya-respondida')
+
+    const r = resumenEncuesta(obtenerDb(), a.id)
+    expect(r).toMatchObject({ media: 4, volverian: 1, enviadas: 1 })
+    expect(r.respuestas[0].comentario).toBe('Más agua')
+    expect(generarCSV(a, obtenerDb().inscripciones)).toContain('Más agua')
   })
 })

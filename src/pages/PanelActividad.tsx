@@ -1,19 +1,20 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAhora, useDb } from '../lib/hooks'
-import { cancelar, forzarVencimiento, listaEspera, marcarAsistencia, ofertaActiva, plazasLibres } from '../lib/store'
-import { fechaLarga, tiempoRestante } from '../lib/fechas'
+import { cancelar, enviarEncuesta, forzarVencimiento, listaEspera, marcarAsistencia, ofertaActiva, plazasLibres, resumenEncuesta } from '../lib/store'
+import { fechaLarga, precioTexto, tiempoRestante } from '../lib/fechas'
 import { Plazas } from '../components/Plazas'
 import { EstadoAsistencia } from './Puerta'
 import { exportar } from './Panel'
 
-type Pestana = 'inscritos' | 'espera' | 'asistencia'
+type Pestana = 'inscritos' | 'espera' | 'asistencia' | 'encuesta'
 
 export function PanelActividad() {
   const { id } = useParams()
   const db = useDb()
   const ahora = useAhora(15_000)
   const [pestana, setPestana] = useState<Pestana>('inscritos')
+  const [avisoEncuesta, setAvisoEncuesta] = useState('')
   const lista = useRef<HTMLDivElement>(null)
   const a = db.actividades.find((x) => x.id === id)
   if (!a) return <section className="estado"><h1>Actividad no encontrada</h1><Link to="/organizador">Volver</Link></section>
@@ -23,11 +24,13 @@ export function PanelActividad() {
     .sort((x, y) => x.nombre.localeCompare(y.nombre))
   const espera = listaEspera(db, a.id)
   const asistieron = inscritos.filter((i) => i.asistio).length
+  const encuesta = resumenEncuesta(db, a.id)
 
-  const pestanas: [Pestana, string, number][] = [
+  const pestanas: [Pestana, string, number, string?][] = [
     ['inscritos', 'Inscritos', inscritos.length],
-    ['espera', 'Lista de espera', espera.length],
+    ['espera', 'Lista de espera', espera.length, 'Espera'],
     ['asistencia', 'Asistencia', asistieron],
+    ['encuesta', 'Encuesta', encuesta.respuestas.length],
   ]
 
   // Patrón de pestañas: las flechas mueven la selección y el foco.
@@ -46,14 +49,14 @@ export function PanelActividad() {
       <div className="panel__cabecera">
         <div>
           <h1>{a.titulo}</h1>
-          <p className="meta"><span className="capital">{fechaLarga(a.fecha)} · {a.hora} h</span><span>{a.lugar}</span></p>
+          <p className="meta"><span className="capital">{fechaLarga(a.fecha)} · {a.hora} h</span><span>{a.lugar}</span><span>{precioTexto(a.precio)}</span></p>
         </div>
         <button className="boton boton--secundario" onClick={() => exportar(a, db.inscripciones)}>Exportar CSV</button>
       </div>
       <Plazas libres={plazasLibres(db, a, ahora)} total={a.plazas} />
 
       <div className="pestanas" role="tablist" aria-label="Personas" ref={lista} onKeyDown={teclas}>
-        {pestanas.map(([k, texto, n]) => (
+        {pestanas.map(([k, texto, n, corto]) => (
           <button
             key={k}
             id={`pestana-${k}`}
@@ -63,7 +66,8 @@ export function PanelActividad() {
             tabIndex={pestana === k ? 0 : -1}
             onClick={() => setPestana(k)}
           >
-            {texto} <span className="contador-pestana">{n}</span>
+            {corto ? <><span className="texto-largo">{texto}</span><span className="texto-corto" aria-hidden="true">{corto}</span></> : texto}{' '}
+            <span className="contador-pestana">{n}</span>
           </button>
         ))}
       </div>
@@ -121,6 +125,42 @@ export function PanelActividad() {
                   {!i.asistio && <button className="boton boton--chico" onClick={() => marcarAsistencia(i.id)}>Marcar asistencia</button>}
                 </li>
               ))}
+            </ul>
+          </>
+        )}
+
+        {pestana === 'encuesta' && (
+          <>
+            <div className="resumen-encuesta">
+              <div><b>{encuesta.respuestas.length}/{encuesta.enviadas}</b><small>respondieron</small></div>
+              <div><b>{encuesta.respuestas.length ? encuesta.media.toFixed(1) : '–'}</b><small>valoración media</small></div>
+              <div><b>{encuesta.respuestas.length ? `${Math.round((encuesta.volverian / encuesta.respuestas.length) * 100)} %` : '–'}</b><small>volvería</small></div>
+            </div>
+            <div className="contador">
+              <span>La encuesta se envía por correo a quienes asistieron.</span>
+              <button
+                className="boton boton--chico"
+                disabled={asistieron === 0}
+                onClick={async () => {
+                  const n = await enviarEncuesta(a.id)
+                  setAvisoEncuesta(n ? `Enviada a ${n} ${n === 1 ? 'persona' : 'personas'}.` : 'Todos los asistentes ya la tienen.')
+                }}
+              >
+                Enviar encuesta
+              </button>
+            </div>
+            <p className="nota" role="status">{asistieron === 0 ? 'Marca la asistencia primero: solo se envía a quienes vinieron.' : avisoEncuesta}</p>
+            <ul className="tabla">
+              {encuesta.respuestas.map((r) => (
+                <li key={r.nombre + r.respondidaEn}>
+                  <div>
+                    <b>{r.nombre}</b>
+                    <small>{r.volveria ? 'Volvería' : 'No volvería'}{r.comentario ? ` · “${r.comentario}”` : ''}</small>
+                  </div>
+                  <span className="estrellas-chicas" aria-label={`${r.valoracion} de 5`}>{'★'.repeat(r.valoracion)}{'☆'.repeat(5 - r.valoracion)}</span>
+                </li>
+              ))}
+              {encuesta.respuestas.length === 0 && <li className="vacio">Aún no hay respuestas.</li>}
             </ul>
           </>
         )}

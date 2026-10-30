@@ -1,4 +1,4 @@
-import type { Actividad, Correo, DB, Inscripcion } from './types'
+import type { Actividad, Correo, DB, Inscripcion, RespuestaEncuesta } from './types'
 import { crearSemilla } from './seed'
 
 const KEY = 'cra:db:v1'
@@ -84,6 +84,9 @@ function leer(): DB {
       const db = JSON.parse(raw) as DB
       if (!Array.isArray(db?.actividades) || !Array.isArray(db?.inscripciones)) throw new Error('Formato inesperado')
       db.correos ??= []
+      // Datos guardados antes de existir el precio y el consentimiento.
+      for (const a of db.actividades) a.precio ??= 0
+      for (const i of db.inscripciones) i.consentimientoEn ??= null
       cacheRaw = raw
       cacheDb = db
       return db
@@ -257,6 +260,8 @@ export interface DatosInscripcion {
   nombre: string
   correo: string
   telefono: string
+  /** Casilla de consentimiento para el tratamiento de datos; sin ella no se inscribe. */
+  consentimiento: boolean
 }
 
 export type ResultadoInscripcion = { inscripcion: Inscripcion; yaExistia: boolean }
@@ -266,10 +271,12 @@ export function validarDatos(d: Omit<DatosInscripcion, 'actividadId'>): Partial<
   if (d.nombre.trim().length < 3) errores.nombre = 'Escribe tu nombre y apellido.'
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim())) errores.correo = 'Revisa el correo, parece incompleto.'
   if (d.telefono.replace(/\D/g, '').length < 7) errores.telefono = 'Necesitamos un teléfono de al menos 7 dígitos.'
+  if (!d.consentimiento) errores.consentimiento = 'Para inscribirte necesitamos que aceptes el uso de tus datos.'
   return errores
 }
 
 export function inscribir(datos: DatosInscripcion): Promise<ResultadoInscripcion> {
+  if (!datos.consentimiento) return Promise.reject(new Error('Falta el consentimiento para el tratamiento de datos'))
   return tx((db, ahora) => {
     const actividad = actividadDe(db, datos.actividadId)
     const correo = normalizarCorreo(datos.correo)
@@ -293,6 +300,7 @@ export function inscribir(datos: DatosInscripcion): Promise<ResultadoInscripcion
       posicionEspera: hayPlaza ? 0 : listaEspera(db, actividad.id).length + 1,
       fechaLimiteConfirmacion: null,
       creadaEn: ahora.toISOString(),
+      consentimientoEn: ahora.toISOString(),
     }
     db.inscripciones.push(inscripcion)
     enviarCorreo(db, ahora, hayPlaza ? correoConfirmacion(actividad, inscripcion) : correoEspera(actividad, inscripcion))
@@ -401,7 +409,67 @@ export function crearActividad(datos: DatosActividad): Promise<Actividad> {
 
 /** Duplicar copia todos los datos de la actividad salvo la fecha; los inscritos nunca se copian. */
 export function plantillaDuplicado(a: Actividad): DatosActividad {
-  return { titulo: a.titulo, hora: a.hora, lugar: a.lugar, descripcion: a.descripcion, plazas: a.plazas, fecha: '' }
+  return { titulo: a.titulo, hora: a.hora, lugar: a.lugar, descripcion: a.descripcion, plazas: a.plazas, precio: a.precio, fecha: '' }
+}
+
+// ---------- Encuesta tras la actividad ----------
+
+/** Envía el enlace de la encuesta a quienes asistieron y aún no la tienen. Devuelve cuántos correos salieron. */
+export function enviarEncuesta(actividadId: string): Promise<number> {
+  return tx((db, ahora) => {
+    const actividad = actividadDe(db, actividadId)
+    const asistentes = db.inscripciones.filter(
+      (i) =>
+        i.actividadId === actividadId &&
+        i.asistio &&
+        !i.encuesta &&
+        !db.correos.some((c) => c.inscripcionId === i.id && c.enlace?.ruta.startsWith('/encuesta/')),
+    )
+    for (const i of asistentes) {
+      enviarCorreo(db, ahora, {
+        para: i.correo,
+        inscripcionId: i.id,
+        asunto: `¿Qué tal ${actividad.titulo}?`,
+        cuerpo: `Hola ${i.nombre}, gracias por venir. Cuéntanos en 30 segundos cómo te fue: nos ayuda a preparar las próximas actividades.`,
+        enlace: { texto: 'Responder la encuesta', ruta: `/encuesta/${i.codigoQR}` },
+      })
+    }
+    return asistentes.length
+  })
+}
+
+export type ResultadoEncuesta = 'guardada' | 'ya-respondida' | 'no-asistio' | 'no-encontrada' | 'no-valida'
+
+export function responderEncuesta(codigo: string, r: Omit<RespuestaEncuesta, 'respondidaEn'>): Promise<ResultadoEncuesta> {
+  return tx((db, ahora) => {
+    const i = db.inscripciones.find((x) => x.codigoQR === codigo)
+    if (!i) return 'no-encontrada'
+    if (!i.asistio) return 'no-asistio'
+    if (i.encuesta) return 'ya-respondida'
+    if (!Number.isInteger(r.valoracion) || r.valoracion < 1 || r.valoracion > 5) return 'no-valida'
+    i.encuesta = {
+      valoracion: r.valoracion,
+      volveria: r.volveria,
+      comentario: r.comentario.trim().slice(0, 500),
+      respondidaEn: ahora.toISOString(),
+    }
+    return 'guardada'
+  })
+}
+
+export function resumenEncuesta(db: DB, actividadId: string) {
+  const respuestas = db.inscripciones.filter((i) => i.actividadId === actividadId && i.encuesta).map((i) => ({ ...i.encuesta!, nombre: i.nombre }))
+  const n = respuestas.length
+  return {
+    respuestas: respuestas.sort((a, b) => b.respondidaEn.localeCompare(a.respondidaEn)),
+    media: n ? respuestas.reduce((t, r) => t + r.valoracion, 0) / n : 0,
+    volverian: respuestas.filter((r) => r.volveria).length,
+    enviadas: new Set(
+      db.correos
+        .filter((c) => c.enlace?.ruta.startsWith('/encuesta/') && db.inscripciones.some((i) => i.id === c.inscripcionId && i.actividadId === actividadId))
+        .map((c) => c.inscripcionId),
+    ).size,
+  }
 }
 
 /** Solo para demostración: adelanta el reloj de una oferta para comprobar el paso al siguiente. */

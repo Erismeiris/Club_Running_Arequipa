@@ -6,6 +6,8 @@ export interface Actividad {
   lugar: string
   descripcion: string
   plazas: number
+  /** Precio informativo en soles; 0 = gratis. No se cobra en la app. */
+  precio: number
 }
 
 export type EstadoInscripcion = 'confirmada' | 'espera' | 'cancelada'
@@ -25,6 +27,18 @@ export interface Inscripcion {
   /** ISO datetime; solo se usa cuando se le ofrece una plaza liberada desde la lista de espera */
   fechaLimiteConfirmacion: string | null
   creadaEn: string
+  /** ISO datetime en que aceptó el tratamiento de sus datos (null en registros anteriores a la casilla). */
+  consentimientoEn: string | null
+  /** Encuesta corta tras la actividad; solo para quienes asistieron. */
+  encuesta?: RespuestaEncuesta
+}
+
+export interface RespuestaEncuesta {
+  /** 1 a 5 */
+  valoracion: number
+  volveria: boolean
+  comentario: string
+  respondidaEn: string
 }
 
 /** Correos simulados: sin backend, se guardan en una bandeja local para poder seguir los enlaces. */

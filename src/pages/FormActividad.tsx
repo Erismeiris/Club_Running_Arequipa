@@ -4,7 +4,7 @@ import { useDb } from '../lib/hooks'
 import { crearActividad, plantillaDuplicado, type DatosActividad } from '../lib/store'
 import { aISODate } from '../lib/fechas'
 
-const vacia: DatosActividad = { titulo: '', fecha: '', hora: '', lugar: '', descripcion: '', plazas: 20 }
+const vacia: DatosActividad = { titulo: '', fecha: '', hora: '', lugar: '', descripcion: '', plazas: 20, precio: 0 }
 
 export function FormActividad() {
   const [params] = useSearchParams()
@@ -20,6 +20,7 @@ export function FormActividad() {
     e.preventDefault()
     if (!datos.titulo.trim() || !datos.fecha || !datos.hora || !datos.lugar.trim()) return setError('Completa título, fecha, hora y lugar.')
     if (!Number.isInteger(datos.plazas) || datos.plazas < 1) return setError('Las plazas deben ser un número mayor que 0.')
+    if (!Number.isFinite(datos.precio) || datos.precio < 0) return setError('El precio no puede ser negativo; deja 0 si es gratis.')
     const a = await crearActividad({ ...datos, titulo: datos.titulo.trim(), lugar: datos.lugar.trim() })
     navigate(`/organizador/actividad/${a.id}`)
   }
@@ -38,7 +39,14 @@ export function FormActividad() {
         </div>
         <label>Lugar<input value={datos.lugar} onChange={(e) => set('lugar', e.target.value)} /></label>
         <label>Descripción<textarea rows={4} value={datos.descripcion} onChange={(e) => set('descripcion', e.target.value)} /></label>
-        <label>Plazas<input type="number" min={1} inputMode="numeric" value={datos.plazas || ''} onChange={(e) => set('plazas', Number(e.target.value))} /></label>
+        <div className="fila-2">
+          <label>Plazas<input type="number" min={1} inputMode="numeric" value={datos.plazas || ''} onChange={(e) => set('plazas', Number(e.target.value))} /></label>
+          <label>
+            Precio informativo (S/)
+            <input type="number" min={0} step="0.5" inputMode="decimal" value={datos.precio} onChange={(e) => set('precio', Number(e.target.value))} aria-describedby="nota-precio" />
+          </label>
+        </div>
+        <p className="nota" id="nota-precio">Solo se muestra a los socios; la app no cobra. Deja 0 si es gratis.</p>
         {error && <p className="aviso aviso--error">{error}</p>}
         <button className="boton boton--bloque">Guardar actividad</button>
       </form>

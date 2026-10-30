@@ -32,3 +32,7 @@ export function tiempoRestante(iso: string, ahora = new Date()) {
   const m = Math.floor((ms % 3600_000) / 60_000)
   return h > 0 ? `${h} h ${m} min` : `${m} min`
 }
+
+/** Precio informativo en soles; 0 se muestra como gratis. */
+export const precioTexto = (soles: number) =>
+  soles > 0 ? `S/ ${soles.toLocaleString('es-PE', { minimumFractionDigits: soles % 1 ? 2 : 0, maximumFractionDigits: 2 })}` : 'Gratis'

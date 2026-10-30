@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAhora, useDb } from '../lib/hooks'
 import { plazasLibres } from '../lib/store'
-import { esProxima, fechaCorta, fechaLarga } from '../lib/fechas'
+import { esProxima, fechaCorta, fechaLarga, precioTexto } from '../lib/fechas'
 import { Plazas } from '../components/Plazas'
 
 export function Home() {
@@ -39,6 +39,7 @@ export function Home() {
                     <span className="solo-lector">{fechaLarga(a.fecha)}</span>
                     <span><span aria-hidden="true">📍 </span>{a.lugar}</span>
                     <span><span aria-hidden="true">🕕 </span>{a.hora} h</span>
+                    <span>{precioTexto(a.precio)}</span>
                   </p>
                   <Plazas libres={plazasLibres(db, a, ahora)} total={a.plazas} compacto />
                   <Link className="boton boton--bloque" to={`/actividad/${a.id}`} aria-describedby={`titulo-${a.id}`}>

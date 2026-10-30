@@ -2,7 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAhora, useDb } from '../lib/hooks'
 import { inscribir, listaEspera, plazasLibres, validarDatos } from '../lib/store'
-import { fechaLarga } from '../lib/fechas'
+import { fechaLarga, precioTexto } from '../lib/fechas'
 import { Plazas } from '../components/Plazas'
 
 export function FichaActividad() {
@@ -11,6 +11,7 @@ export function FichaActividad() {
   const ahora = useAhora()
   const navigate = useNavigate()
   const [datos, setDatos] = useState({ nombre: '', correo: '', telefono: '' })
+  const [consentimiento, setConsentimiento] = useState(false)
   const [errores, setErrores] = useState<Record<string, string>>({})
   const [enviando, setEnviando] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
@@ -31,14 +32,14 @@ export function FichaActividad() {
 
   async function enviar(e: FormEvent) {
     e.preventDefault()
-    const errs = validarDatos(datos)
+    const errs = validarDatos({ ...datos, consentimiento })
     setErrores(errs as Record<string, string>)
-    const primero = (['nombre', 'correo', 'telefono'] as const).find((k) => errs[k])
+    const primero = (['nombre', 'correo', 'telefono', 'consentimiento'] as const).find((k) => errs[k])
     // Los errores quedan encima del botón: llevamos el foco al primer campo que hay que corregir.
     if (primero) return formRef.current?.querySelector<HTMLInputElement>(`#campo-${primero}`)?.focus()
     setEnviando(true)
     try {
-      const { inscripcion, yaExistia } = await inscribir({ ...datos, actividadId: actividad!.id })
+      const { inscripcion, yaExistia } = await inscribir({ ...datos, consentimiento, actividadId: actividad!.id })
       navigate(`/inscripcion/${inscripcion.codigoQR}`, { state: { yaExistia } })
     } finally {
       setEnviando(false)
@@ -66,7 +67,11 @@ export function FichaActividad() {
         <div><dt>Fecha</dt><dd className="capital">{fechaLarga(actividad.fecha)}</dd></div>
         <div><dt>Hora</dt><dd>{actividad.hora} h</dd></div>
         <div><dt>Lugar</dt><dd>{actividad.lugar}</dd></div>
+        <div><dt>Precio</dt><dd>{precioTexto(actividad.precio)}</dd></div>
       </dl>
+      {actividad.precio > 0 && (
+        <p className="nota">Precio informativo: no se paga en esta web. El club te indicará cómo pagarlo.</p>
+      )}
       <p className="descripcion">{actividad.descripcion}</p>
 
       <Plazas libres={libres} total={actividad.plazas} />
@@ -94,6 +99,31 @@ export function FichaActividad() {
           <input {...campo('telefono')} type="tel" inputMode="tel" autoComplete="tel" placeholder="959 000 000" />
           {errores.telefono && <small className="error" id="error-telefono">{errores.telefono}</small>}
         </label>
+        <div className="consentimiento">
+          <label className="casilla">
+            <input
+              type="checkbox"
+              id="campo-consentimiento"
+              checked={consentimiento}
+              onChange={(e) => {
+                setConsentimiento(e.target.checked)
+                if (errores.consentimiento) setErrores({ ...errores, consentimiento: '' })
+              }}
+              aria-invalid={!!errores.consentimiento}
+              aria-describedby={errores.consentimiento ? 'error-consentimiento' : 'detalle-consentimiento'}
+            />
+            <span>Acepto que el Club de Running Arequipa guarde mis datos para gestionar esta inscripción.</span>
+          </label>
+          <details id="detalle-consentimiento">
+            <summary>Cómo usamos tus datos</summary>
+            <p>
+              Usamos tu nombre, correo y teléfono solo para gestionar tu plaza, avisarte de cambios, controlar la asistencia y
+              enviarte una encuesta corta tras la actividad. No los compartimos con terceros. Puedes pedir que los borremos
+              escribiendo al club, como establece la Ley N.º 29733 de Protección de Datos Personales.
+            </p>
+          </details>
+          {errores.consentimiento && <small className="error" id="error-consentimiento">{errores.consentimiento}</small>}
+        </div>
         <button className={`boton boton--bloque${llena ? ' boton--secundario' : ''}`} disabled={enviando}>
           {enviando ? 'Guardando…' : llena ? 'Unirme a la lista de espera' : 'Inscribirme'}
         </button>

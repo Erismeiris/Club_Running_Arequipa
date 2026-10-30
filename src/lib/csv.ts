@@ -5,7 +5,7 @@ const celda = (v: string | number) => {
   return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
 
-/** CSV con inscritos y lista de espera, incluido el estado de asistencia. Las canceladas se omiten. */
+/** CSV con inscritos y lista de espera, incluido el estado de asistencia y la encuesta. Las canceladas se omiten. */
 export function generarCSV(actividad: Actividad, inscripciones: Inscripcion[]): string {
   const filas = inscripciones
     .filter((i) => i.actividadId === actividad.id && i.estado !== 'cancelada')
@@ -24,10 +24,15 @@ export function generarCSV(actividad: Actividad, inscripciones: Inscripcion[]): 
       i.estado === 'confirmada' ? (i.asistio ? 'Asistió' : 'Pendiente') : '',
       i.qrUsado ? 'Sí' : 'No',
       i.fechaLimiteConfirmacion ?? '',
+      i.consentimientoEn ?? '',
+      i.encuesta?.valoracion ?? '',
+      i.encuesta ? (i.encuesta.volveria ? 'Sí' : 'No') : '',
+      i.encuesta?.comentario ?? '',
     ])
   const cabecera = [
     'Actividad', 'Fecha', 'Lista', 'Posición espera', 'Nombre', 'Correo', 'Teléfono',
     'Código QR', 'Asistencia', 'QR usado', 'Límite para confirmar',
+    'Consentimiento de datos', 'Encuesta: valoración (1-5)', 'Encuesta: volvería', 'Encuesta: comentario',
   ]
   return [cabecera, ...filas].map((f) => f.map(celda).join(',')).join('\r\n')
 }

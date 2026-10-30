@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAhora, useDb } from '../lib/hooks'
 import { listaEspera, plazasLibres, restablecerDemo } from '../lib/store'
-import { esProxima, fechaLarga } from '../lib/fechas'
+import { esProxima, fechaLarga, precioTexto } from '../lib/fechas'
 import { descargarCSV, generarCSV } from '../lib/csv'
 import { Plazas } from '../components/Plazas'
 import type { Actividad } from '../lib/types'
@@ -36,6 +36,7 @@ export function Panel() {
                 <p className="meta">
                   <span className="capital">{fechaLarga(a.fecha)} · {a.hora} h</span>
                   <span>{a.lugar}</span>
+                  <span>{precioTexto(a.precio)}</span>
                 </p>
                 <Plazas libres={plazasLibres(db, a, ahora)} total={a.plazas} compacto />
                 <p className="meta">

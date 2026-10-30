@@ -9,13 +9,14 @@ React 19 + Vite + TypeScript, persistencia en `localStorage`, despliegue en Netl
 | Ruta | Pantalla |
 | --- | --- |
 | `/` | Home pública: próximas actividades con "Plazas libres: X/Y" |
-| `/actividad/:id` | Ficha + formulario de 3 campos ("Inscribirme" o "Unirme a la lista de espera") |
+| `/actividad/:id` | Ficha con precio informativo + formulario de 3 campos y casilla de consentimiento de datos ("Inscribirme" o "Unirme a la lista de espera") |
 | `/inscripcion/:codigo` | Confirmación con código QR y aviso de correo enviado |
 | `/cancelar/:codigo` | Cancelación (enlace del correo) con paso de confirmación |
 | `/plaza/:codigo` | Confirmar una plaza liberada desde la lista de espera (24 h) |
+| `/encuesta/:codigo` | Encuesta corta tras la actividad (enlace del correo, solo para quienes asistieron) |
 | `/puerta` | Control de asistencia (protegido con clave): escáner QR, código manual y búsqueda por nombre |
 | `/organizador` | Panel (protegido con clave): crear, duplicar, ver inscritos y exportar CSV |
-| `/organizador/actividad/:id` | Detalle con pestañas Inscritos / Lista de espera / Asistencia |
+| `/organizador/actividad/:id` | Detalle con pestañas Inscritos / Lista de espera / Asistencia / Encuesta |
 | `/correos` | Bandeja de correos simulada (demo, protegida con la clave de organizador) |
 
 ## Acceso a puerta y organizador
@@ -43,7 +44,10 @@ printf "VITE_CLAVE_PUERTA=otra-clave\nVITE_CLAVE_ORGANIZADOR=clave-organizador\n
 - **Lista de espera**: al cancelar una plaza confirmada se ofrece al primero de la lista con `fechaLimiteConfirmacion` = ahora + 24 h. La plaza queda reservada mientras dure la oferta. Si vence, se anula y se ofrece al siguiente (se comprueba al abrir la app y cada minuto).
 - **QR de un solo uso**: validar marca `qrUsado` y `asistio`; una segunda lectura muestra "QR ya usado". El marcado manual también inutiliza el QR.
 - **Duplicar** copia título, hora, lugar, descripción y plazas; no copia la fecha ni los inscritos.
-- **CSV** con inscritos, lista de espera (con posición) y asistencia, con BOM para Excel.
+- **CSV** con inscritos, lista de espera (con posición), asistencia, fecha del consentimiento y respuestas de la encuesta, con BOM para Excel.
+- **Consentimiento de datos**: sin marcar la casilla no se puede inscribir (se valida en el formulario y en `inscribir`). Se guarda la fecha en `consentimientoEn`. Las inscripciones anteriores a la casilla quedan con `null`.
+- **Precio informativo**: `precio` en soles en cada actividad (0 = "Gratis"). Solo se muestra; la app no cobra. Duplicar también lo copia. Las actividades guardadas antes de este campo se leen como gratis.
+- **Encuesta tras la actividad**: desde la pestaña Encuesta, el organizador envía el enlace por correo a quienes tienen la asistencia marcada (una vez por persona). La encuesta tiene una valoración de 1 a 5, "¿Volverías?" y un comentario opcional. Se responde una sola vez, y el panel muestra respuestas, media y % que volvería.
 
 ## Desarrollo
 

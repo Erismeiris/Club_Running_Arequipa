@@ -150,7 +150,7 @@ a { color: inherit; }
 /* ---------- Ficha y formularios ---------- */
 .ficha { display: flex; flex-direction: column; gap: 14px; }
 .ficha h1 { margin: 0; }
-.datos-ficha { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 6px 22px; margin: 0; }
+.datos-ficha { display: flex; flex-wrap: wrap; justify-content: start; gap: 10px 22px; margin: 0; }
 .datos-ficha dt { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--tinta-suave); font-weight: 700; }
 .datos-ficha dd { margin: 0; font-weight: 600; }
 .descripcion { color: #3c4545; font-size: 1.02rem; }
@@ -169,6 +169,35 @@ textarea { resize: vertical; }
 input[aria-invalid='true'] { border-color: var(--error); background: var(--error-suave); }
 .error { color: var(--error); font-weight: 500; }
 .nota { color: var(--tinta-suave); font-size: 0.88rem; margin: 0; }
+.consentimiento { display: grid; gap: 6px; }
+.casilla { display: flex; align-items: flex-start; gap: 12px; font-weight: 500; cursor: pointer; }
+.casilla input { width: 24px; height: 24px; min-height: 0; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--acento-fuerte); cursor: pointer; }
+.casilla input[aria-invalid='true'] { outline: 2px solid var(--error); outline-offset: 2px; }
+.consentimiento details { font-size: 0.88rem; color: var(--tinta-suave); padding-left: 36px; }
+.consentimiento summary { cursor: pointer; text-decoration: underline; width: fit-content; }
+.consentimiento details p { margin: 6px 0 0; }
+.consentimiento .error { padding-left: 36px; }
+
+/* ---------- Encuesta ---------- */
+.pregunta { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
+.pregunta legend { font-weight: 600; font-size: 0.95rem; padding: 0; margin-bottom: 8px; }
+.estrellas, .opciones { display: flex; gap: 8px; }
+.estrellas input, .opciones input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; }
+.estrellas label { cursor: pointer; font-size: 2.3rem; line-height: 1; color: var(--borde-campo); transition: color 0.15s, transform 0.15s; }
+.estrellas label.activa { color: var(--acento); }
+.estrellas label:hover { transform: scale(1.1); }
+.opciones label {
+  flex: 1; display: grid; place-items: center; min-height: 48px; border: 1.5px solid var(--borde-campo); border-radius: 14px;
+  cursor: pointer; background: var(--fondo);
+}
+.opciones label.activa { border-color: var(--acento-fuerte); background: var(--acento-suave); color: var(--acento-oscuro); }
+.estrellas label:has(input:focus-visible), .opciones label:has(input:focus-visible) { outline: 2px solid var(--acento-fuerte); outline-offset: 3px; border-radius: 8px; }
+.opcional { color: var(--tinta-suave); font-weight: 400; }
+.resumen-encuesta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 14px; }
+.resumen-encuesta div { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; }
+.resumen-encuesta b { font-family: var(--titulos); font-size: 1.5rem; }
+.resumen-encuesta small { color: var(--tinta-suave); }
+.estrellas-chicas { color: var(--acento); letter-spacing: 1px; white-space: nowrap; }
 .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 .aviso { padding: 12px 14px; border-radius: 14px; margin: 0; font-size: 0.95rem; }
@@ -244,6 +273,8 @@ input[aria-invalid='true'] { border-color: var(--error); background: var(--error
 .acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .acciones > :first-child { grid-column: 1 / -1; }
 
+.texto-corto { display: none; }
+@media (max-width: 420px) { .texto-corto { display: inline; } }
 .pestanas { display: flex; gap: 2px; border-bottom: 1px solid var(--borde); overflow-x: auto; }
 .pestanas button {
   flex: 1 0 auto; min-height: 48px; background: none; border: none; border-bottom: 3px solid transparent; padding: 10px 8px; font: inherit;
@@ -265,8 +296,9 @@ input[aria-invalid='true'] { border-color: var(--error); background: var(--error
 
 @media (max-width: 420px) {
   .pestanas { gap: 0; }
-  .pestanas button { flex-shrink: 1; padding: 10px 4px; font-size: 0.9rem; }
-  .contador-pestana { padding: 1px 6px; font-size: 0.75rem; }
+  .texto-largo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .pestanas button { flex-shrink: 1; padding: 10px 2px; font-size: 0.86rem; }
+  .contador-pestana { padding: 1px 5px; font-size: 0.72rem; margin-left: 0; }
 }
 
 @media (min-width: 720px) {

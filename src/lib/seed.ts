@@ -18,6 +18,7 @@ export function crearSemilla(hoy: Date): DB {
         descripcion:
           'Salimos del mirador, bajamos por Cayma y volvemos por el malecón del Chili. Ritmo conversacional, nadie se queda atrás: habrá grupos de 5:30, 6:00 y 6:30 min/km. Trae agua y gorra, el sol de Arequipa no perdona.',
         plazas: 20,
+        precio: 0,
       },
       {
         id: 'act-taller-tecnica',
@@ -28,6 +29,7 @@ export function crearSemilla(hoy: Date): DB {
         descripcion:
           'Dos horas en pista para trabajar postura, cadencia y apoyo. Grabamos un video corto de cada participante y lo comentamos en grupo. Grupo reducido para poder corregir a cada uno.',
         plazas: 12,
+        precio: 25,
       },
     ],
     inscripciones: [
@@ -44,6 +46,7 @@ export function crearSemilla(hoy: Date): DB {
         posicionEspera: 0,
         fechaLimiteConfirmacion: null,
         creadaEn: creada,
+        consentimientoEn: creada,
       },
       {
         id: 'ins-2',
@@ -58,6 +61,7 @@ export function crearSemilla(hoy: Date): DB {
         posicionEspera: 0,
         fechaLimiteConfirmacion: null,
         creadaEn: creada,
+        consentimientoEn: creada,
       },
       {
         id: 'ins-3',
@@ -72,6 +76,7 @@ export function crearSemilla(hoy: Date): DB {
         posicionEspera: 0,
         fechaLimiteConfirmacion: null,
         creadaEn: creada,
+        consentimientoEn: creada,
       },
     ],
     correos: [],
