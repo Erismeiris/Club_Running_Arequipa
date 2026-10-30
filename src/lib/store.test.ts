@@ -107,12 +107,17 @@ describe('control de puerta', () => {
 })
 
 describe('organizador', () => {
-  it('duplicar copia título, lugar, descripción y plazas, pero no fecha ni inscritos', () => {
-    const original = obtenerDb().actividades[0]
+  it('duplicar copia todo menos la fecha y los inscritos', async () => {
+    const db = obtenerDb()
+    const original = db.actividades[0]
+    const { id, fecha, ...resto } = original
     const copia = plantillaDuplicado(original)
-    expect(copia).toMatchObject({ titulo: original.titulo, lugar: original.lugar, descripcion: original.descripcion, plazas: original.plazas })
-    expect(copia.fecha).toBe('')
-    expect(copia).not.toHaveProperty('id')
+    expect(copia).toEqual({ ...resto, fecha: '' })
+
+    const nueva = await crearActividad({ ...copia, fecha: '2030-02-01' })
+    expect(nueva.id).not.toBe(id)
+    expect(obtenerDb().inscripciones.filter((i) => i.actividadId === nueva.id)).toHaveLength(0)
+    expect(fecha).not.toBe('2030-02-01')
   })
 
   it('el CSV incluye inscritos, lista de espera y asistencia', async () => {

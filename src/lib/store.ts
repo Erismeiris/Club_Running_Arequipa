@@ -399,9 +399,9 @@ export function crearActividad(datos: DatosActividad): Promise<Actividad> {
   })
 }
 
-/** Duplicar copia título, lugar, descripción y plazas; nunca la fecha ni los inscritos. */
+/** Duplicar copia todos los datos de la actividad salvo la fecha; los inscritos nunca se copian. */
 export function plantillaDuplicado(a: Actividad): DatosActividad {
-  return { titulo: a.titulo, lugar: a.lugar, descripcion: a.descripcion, plazas: a.plazas, fecha: '', hora: '' }
+  return { titulo: a.titulo, hora: a.hora, lugar: a.lugar, descripcion: a.descripcion, plazas: a.plazas, fecha: '' }
 }
 
 /** Solo para demostración: adelanta el reloj de una oferta para comprobar el paso al siguiente. */

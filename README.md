@@ -42,7 +42,7 @@ printf "VITE_CLAVE_PUERTA=otra-clave\nVITE_CLAVE_ORGANIZADOR=clave-organizador\n
 - **Plazas atómicas**: cada operación es una transacción que relee el estado, comprueba y escribe dentro de un Web Lock (`navigator.locks`) exclusivo, así que dos inscripciones simultáneas a la última plaza (aunque sea desde otra pestaña) no pueden entrar las dos: la segunda queda en lista de espera.
 - **Lista de espera**: al cancelar una plaza confirmada se ofrece al primero de la lista con `fechaLimiteConfirmacion` = ahora + 24 h. La plaza queda reservada mientras dure la oferta. Si vence, se anula y se ofrece al siguiente (se comprueba al abrir la app y cada minuto).
 - **QR de un solo uso**: validar marca `qrUsado` y `asistio`; una segunda lectura muestra "QR ya usado". El marcado manual también inutiliza el QR.
-- **Duplicar** copia título, lugar, descripción y plazas; no copia fecha (ni hora) ni inscritos.
+- **Duplicar** copia título, hora, lugar, descripción y plazas; no copia la fecha ni los inscritos.
 - **CSV** con inscritos, lista de espera (con posición) y asistencia, con BOM para Excel.
 
 ## Desarrollo
