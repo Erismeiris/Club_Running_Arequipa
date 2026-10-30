@@ -14,23 +14,28 @@ React 19 + Vite + TypeScript, persistencia en `localStorage`, despliegue en Netl
 | `/cancelar/:codigo` | Cancelación (enlace del correo) con paso de confirmación |
 | `/plaza/:codigo` | Confirmar una plaza liberada desde la lista de espera (24 h) |
 | `/puerta` | Control de asistencia (protegido con clave): escáner QR, código manual y búsqueda por nombre |
-| `/organizador` | Panel: crear, duplicar, ver inscritos y exportar CSV |
+| `/organizador` | Panel (protegido con clave): crear, duplicar, ver inscritos y exportar CSV |
 | `/organizador/actividad/:id` | Detalle con pestañas Inscritos / Lista de espera / Asistencia |
 | `/correos` | Bandeja de correos simulada (demo, ver más abajo) |
 
-## Acceso al control de puerta
+## Acceso a puerta y organizador
 
-La pantalla `/puerta` pide una clave antes de mostrarse.
+El control de puerta y el panel del organizador piden una clave antes de mostrarse.
 
-- **Clave por defecto:** `misti2026`
-- El acceso dura mientras la pestaña esté abierta (se guarda en `sessionStorage`). El botón "Bloquear control de puerta", al pie de la pantalla, la cierra antes, útil si el móvil se comparte entre voluntarios.
-- **Cambiar la clave** sin tocar código: define la variable de entorno `VITE_CLAVE_PUERTA` (en local, en un archivo `.env.local`; en Netlify, en *Project configuration → Environment variables*) y vuelve a desplegar.
+| Zona | Rutas | Clave por defecto | Variable para cambiarla |
+| --- | --- | --- | --- |
+| Control de puerta (voluntarios) | `/puerta` | `misti2026` | `VITE_CLAVE_PUERTA` |
+| Organizador | `/organizador` y sus subrutas (crear, duplicar, ver inscritos, exportar) | `chachani2026` | `VITE_CLAVE_ORGANIZADOR` |
+
+- La clave de organizador también abre la puerta; la de puerta no abre el panel. Así los voluntarios solo reciben la clave de puerta.
+- El acceso dura mientras la pestaña esté abierta (se guarda en `sessionStorage`). El enlace "Bloquear control de puerta" / "Cerrar sesión de organizador", al pie de cada pantalla, cierra ambas zonas antes; útil si el móvil se comparte entre voluntarios.
+- **Cambiar las claves** sin tocar código: define las variables de entorno (en local, en `.env.local`; en Netlify, en *Project configuration → Environment variables*) y vuelve a desplegar.
 
 ```bash
-echo "VITE_CLAVE_PUERTA=otra-clave" > .env.local
+printf "VITE_CLAVE_PUERTA=otra-clave\nVITE_CLAVE_ORGANIZADOR=clave-organizador\n" > .env.local
 ```
 
-> Es una barrera sencilla para que un socio no entre por error, no seguridad real: sin backend, la clave viaja dentro del JavaScript publicado y cualquiera con conocimientos técnicos podría encontrarla. Como este repositorio es público, conviene usar en Netlify una clave distinta a la de este README. El panel del organizador (`/organizador`) sigue sin clave.
+> Es una barrera sencilla para que un socio no entre por error, no seguridad real: sin backend, las claves viajan dentro del JavaScript publicado y cualquiera con conocimientos técnicos podría encontrarlas. Como este repositorio es público, conviene usar en Netlify claves distintas a las de este README.
 
 ## Reglas de negocio (`src/lib/store.ts`)
 

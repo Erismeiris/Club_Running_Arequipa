@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { sincronizar } from './lib/store'
 import { Home } from './pages/Home'
 import { FichaActividad } from './pages/FichaActividad'
@@ -12,7 +12,7 @@ import { PanelActividad } from './pages/PanelActividad'
 import { FormActividad } from './pages/FormActividad'
 import { Correos } from './pages/Correos'
 import { AvisoAlmacenamiento } from './components/AvisoAlmacenamiento'
-import { AccesoPuerta } from './components/AccesoPuerta'
+import { AccesoClub } from './components/AccesoClub'
 
 export function App() {
   const { pathname } = useLocation()
@@ -58,10 +58,12 @@ export function App() {
           <Route path="/inscripcion/:codigo" element={<Inscripcion />} />
           <Route path="/cancelar/:codigo" element={<Cancelar />} />
           <Route path="/plaza/:codigo" element={<ConfirmarPlaza />} />
-          <Route path="/puerta" element={<AccesoPuerta><Puerta /></AccesoPuerta>} />
-          <Route path="/organizador" element={<Panel />} />
-          <Route path="/organizador/nueva" element={<FormActividad />} />
-          <Route path="/organizador/actividad/:id" element={<PanelActividad />} />
+          <Route path="/puerta" element={<AccesoClub zona="puerta"><Puerta /></AccesoClub>} />
+          <Route path="/organizador" element={<AccesoClub zona="organizador"><Outlet /></AccesoClub>}>
+            <Route index element={<Panel />} />
+            <Route path="nueva" element={<FormActividad />} />
+            <Route path="actividad/:id" element={<PanelActividad />} />
+          </Route>
           <Route path="/correos" element={<Correos />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>

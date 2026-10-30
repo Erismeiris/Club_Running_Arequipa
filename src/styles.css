@@ -278,6 +278,6 @@ input[aria-invalid='true'] { border-color: var(--error); background: var(--error
   * { animation: none !important; transition: none !important; }
 }
 
-/* ---------- Acceso a la puerta ---------- */
-.acceso-puerta { width: 100%; max-width: 420px; text-align: left; }
-.bloquear-puerta { text-align: center; margin: 16px 0 0; }
+/* ---------- Acceso a puerta y organizador ---------- */
+.acceso-zona { width: 100%; max-width: 420px; text-align: left; }
+.bloquear-zona { text-align: center; margin: 16px 0 0; }
