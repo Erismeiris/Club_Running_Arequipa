@@ -12,6 +12,7 @@ import { PanelActividad } from './pages/PanelActividad'
 import { FormActividad } from './pages/FormActividad'
 import { Correos } from './pages/Correos'
 import { AvisoAlmacenamiento } from './components/AvisoAlmacenamiento'
+import { AccesoPuerta } from './components/AccesoPuerta'
 
 export function App() {
   const { pathname } = useLocation()
@@ -57,7 +58,7 @@ export function App() {
           <Route path="/inscripcion/:codigo" element={<Inscripcion />} />
           <Route path="/cancelar/:codigo" element={<Cancelar />} />
           <Route path="/plaza/:codigo" element={<ConfirmarPlaza />} />
-          <Route path="/puerta" element={<Puerta />} />
+          <Route path="/puerta" element={<AccesoPuerta><Puerta /></AccesoPuerta>} />
           <Route path="/organizador" element={<Panel />} />
           <Route path="/organizador/nueva" element={<FormActividad />} />
           <Route path="/organizador/actividad/:id" element={<PanelActividad />} />

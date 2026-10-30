@@ -277,3 +277,7 @@ input[aria-invalid='true'] { border-color: var(--error); background: var(--error
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Acceso a la puerta ---------- */
+.acceso-puerta { width: 100%; max-width: 420px; text-align: left; }
+.bloquear-puerta { text-align: center; margin: 16px 0 0; }

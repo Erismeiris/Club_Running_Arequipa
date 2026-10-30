@@ -13,10 +13,24 @@ React 19 + Vite + TypeScript, persistencia en `localStorage`, despliegue en Netl
 | `/inscripcion/:codigo` | Confirmación con código QR y aviso de correo enviado |
 | `/cancelar/:codigo` | Cancelación (enlace del correo) con paso de confirmación |
 | `/plaza/:codigo` | Confirmar una plaza liberada desde la lista de espera (24 h) |
-| `/puerta` | Control de asistencia: escáner QR, código manual y búsqueda por nombre |
+| `/puerta` | Control de asistencia (protegido con clave): escáner QR, código manual y búsqueda por nombre |
 | `/organizador` | Panel: crear, duplicar, ver inscritos y exportar CSV |
 | `/organizador/actividad/:id` | Detalle con pestañas Inscritos / Lista de espera / Asistencia |
 | `/correos` | Bandeja de correos simulada (demo, ver más abajo) |
+
+## Acceso al control de puerta
+
+La pantalla `/puerta` pide una clave antes de mostrarse.
+
+- **Clave por defecto:** `misti2026`
+- El acceso dura mientras la pestaña esté abierta (se guarda en `sessionStorage`). El botón "Bloquear control de puerta", al pie de la pantalla, la cierra antes, útil si el móvil se comparte entre voluntarios.
+- **Cambiar la clave** sin tocar código: define la variable de entorno `VITE_CLAVE_PUERTA` (en local, en un archivo `.env.local`; en Netlify, en *Project configuration → Environment variables*) y vuelve a desplegar.
+
+```bash
+echo "VITE_CLAVE_PUERTA=otra-clave" > .env.local
+```
+
+> Es una barrera sencilla para que un socio no entre por error, no seguridad real: sin backend, la clave viaja dentro del JavaScript publicado y cualquiera con conocimientos técnicos podría encontrarla. Como este repositorio es público, conviene usar en Netlify una clave distinta a la de este README. El panel del organizador (`/organizador`) sigue sin clave.
 
 ## Reglas de negocio (`src/lib/store.ts`)
 
