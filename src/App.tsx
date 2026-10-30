@@ -64,7 +64,7 @@ export function App() {
             <Route path="nueva" element={<FormActividad />} />
             <Route path="actividad/:id" element={<PanelActividad />} />
           </Route>
-          <Route path="/correos" element={<Correos />} />
+          <Route path="/correos" element={<AccesoClub zona="organizador"><Correos /></AccesoClub>} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
       </main>

@@ -16,16 +16,16 @@ React 19 + Vite + TypeScript, persistencia en `localStorage`, despliegue en Netl
 | `/puerta` | Control de asistencia (protegido con clave): escáner QR, código manual y búsqueda por nombre |
 | `/organizador` | Panel (protegido con clave): crear, duplicar, ver inscritos y exportar CSV |
 | `/organizador/actividad/:id` | Detalle con pestañas Inscritos / Lista de espera / Asistencia |
-| `/correos` | Bandeja de correos simulada (demo, ver más abajo) |
+| `/correos` | Bandeja de correos simulada (demo, protegida con la clave de organizador) |
 
 ## Acceso a puerta y organizador
 
-El control de puerta y el panel del organizador piden una clave antes de mostrarse.
+El control de puerta, el panel del organizador y la bandeja de correos piden una clave antes de mostrarse. La bandeja va con la clave de organizador porque contiene los datos y los enlaces de cancelación de todos los inscritos.
 
 | Zona | Rutas | Clave por defecto | Variable para cambiarla |
 | --- | --- | --- | --- |
 | Control de puerta (voluntarios) | `/puerta` | `misti2026` | `VITE_CLAVE_PUERTA` |
-| Organizador | `/organizador` y sus subrutas (crear, duplicar, ver inscritos, exportar) | `chachani2026` | `VITE_CLAVE_ORGANIZADOR` |
+| Organizador | `/organizador` y sus subrutas (crear, duplicar, ver inscritos, exportar) y `/correos` | `chachani2026` | `VITE_CLAVE_ORGANIZADOR` |
 
 - La clave de organizador también abre la puerta; la de puerta no abre el panel. Así los voluntarios solo reciben la clave de puerta.
 - El acceso dura mientras la pestaña esté abierta (se guarda en `sessionStorage`). El enlace "Bloquear control de puerta" / "Cerrar sesión de organizador", al pie de cada pantalla, cierra ambas zonas antes; útil si el móvil se comparte entre voluntarios.
